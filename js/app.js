@@ -20,7 +20,12 @@ async function boot() {
 
 function route() {
   const hash = location.hash || "#/";
-  const handler = routes[hash.split("?")[0]] || renderHome;
+  const path = hash.split("?")[0];
+  // 聞き流し画面から離れるときは読み上げを必ず止める
+  if (path !== "#/listening" && "speechSynthesis" in window) {
+    stopListening();
+  }
+  const handler = routes[path] || renderHome;
   handler();
 }
 
