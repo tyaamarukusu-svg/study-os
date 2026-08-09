@@ -199,6 +199,24 @@
   footer .foot-row div{ line-height:1.7; }
   footer .foot-note{ font-size:11px; color:var(--sub); line-height:1.7; margin-top:4px; }
 
+  @media (max-width:600px){
+    body{ padding:0; }
+    .sheet{ border-radius:0; }
+    header{
+      flex-direction:column;
+      align-items:flex-start;
+      padding:24px 20px 22px;
+      gap:18px;
+    }
+    header h1{ font-size:23px; }
+    header p{ max-width:none; }
+    .qr-block{ align-self:center; }
+    .qr-block img{ width:132px; height:132px; }
+    main{ padding:22px 20px 26px; }
+    footer{ padding:18px 20px 24px; }
+    .sec-head{ flex-wrap:wrap; }
+  }
+
   @media print{
     body{ background:#fff; padding:0; }
     .sheet{ box-shadow:none; border-radius:0; max-width:none; }
