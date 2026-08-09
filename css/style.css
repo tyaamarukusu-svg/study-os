@@ -188,3 +188,23 @@ main {
 
 .choice.is-correct-preview { border-color: var(--ok); background: #e6fbf4; }
 .result-box.mt-md { margin-top: 10px; }
+
+/* 聞き流し */
+.listening-status {
+  text-align: center;
+  font-size: 14px;
+  color: var(--sub);
+  background: #f5f7fb;
+  border-radius: 10px;
+  padding: 12px;
+  margin: 16px 0;
+}
+.listening-controls {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+.listening-controls .choice {
+  margin-bottom: 0;
+  text-align: center;
+}

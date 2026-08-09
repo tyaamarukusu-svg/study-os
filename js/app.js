@@ -46,7 +46,7 @@ function renderHome() {
     </div>
     <div class="menu-grid">
       <button class="menu-card" onclick="location.hash='#/quiz?mode=one'"><span class="icon">✏️</span><span class="label">一問一答</span></button>
-      <button class="menu-card" disabled><span class="icon">🎧</span><span class="label">聞き流し<br><small>準備中</small></span></button>
+      <button class="menu-card" onclick="location.hash='#/listening'"><span class="icon">🎧</span><span class="label">聞き流し</span></button>
       <button class="menu-card" onclick="location.hash='#/stats'"><span class="icon">📊</span><span class="label">学習記録</span></button>
       <button class="menu-card" onclick="location.hash='#/settings'"><span class="icon">⚙️</span><span class="label">設定</span></button>
     </div>
@@ -273,13 +273,142 @@ function pillBtn(value, current) {
   return `<button class="${active}" data-value="${value}">${value}</button>`;
 }
 
-/* ===== 聞き流し（準備中プレースホルダー） ===== */
+/* ===== 聞き流し ===== */
+let listeningState = { queue: [], index: 0, playing: false, token: 0 };
+
 function renderListening() {
   setAppbar("聞き流し");
+  if (!("speechSynthesis" in window)) {
+    app.innerHTML = `
+      <a class="back-link" href="#/">← ホームへ戻る</a>
+      <div class="empty-state">🎧 このブラウザは読み上げ機能に対応していません。</div>
+    `;
+    return;
+  }
+  if (listeningState.queue.length === 0) {
+    listeningState.queue = buildQuestionSet();
+    listeningState.index = 0;
+  }
+  listeningState.playing = false;
+  renderListeningCard();
+}
+
+function renderListeningCard() {
+  const q = listeningState.queue[listeningState.index];
+  if (!q) {
+    app.innerHTML = `
+      <a class="back-link" href="#/">← ホームへ戻る</a>
+      <div class="empty-state">🎧 これで全問終わりです。お疲れさまでした。</div>
+    `;
+    return;
+  }
   app.innerHTML = `
     <a class="back-link" href="#/">← ホームへ戻る</a>
-    <div class="empty-state">🎧 準備中です。<br>音声用文章のデータは既に問題ごとに用意してあるので、後から実装しやすい構造になっています。</div>
+    <div class="q-card">
+      <div class="q-meta"><span>${q.分野}</span><span>${listeningState.index + 1} / ${listeningState.queue.length}問</span></div>
+      <div class="q-text">${escapeHtml(q.問題)}</div>
+      <div id="listeningStatus" class="listening-status">▶ 再生ボタンを押してください</div>
+      <button class="next-btn" id="listeningToggle">▶ 再生する</button>
+      <div class="listening-controls">
+        <button class="choice" id="listeningPrev">⏮ 前の問題</button>
+        <button class="choice" id="listeningSkip">次の問題へ ⏭</button>
+      </div>
+    </div>
   `;
+  document.getElementById("listeningToggle").onclick = toggleListening;
+  document.getElementById("listeningPrev").onclick = () => {
+    stopListening();
+    listeningState.index = Math.max(0, listeningState.index - 1);
+    renderListeningCard();
+  };
+  document.getElementById("listeningSkip").onclick = () => {
+    stopListening();
+    listeningState.index += 1;
+    renderListeningCard();
+  };
+}
+
+function setListeningStatus(text) {
+  const el = document.getElementById("listeningStatus");
+  if (el) el.textContent = text;
+}
+
+function stopListening() {
+  listeningState.playing = false;
+  listeningState.token += 1; // 進行中の読み上げシーケンスを無効化
+  window.speechSynthesis.cancel();
+  const btn = document.getElementById("listeningToggle");
+  if (btn) btn.textContent = "▶ 再生する";
+}
+
+function toggleListening() {
+  if (listeningState.playing) {
+    stopListening();
+    setListeningStatus("⏸ 一時停止しました");
+    return;
+  }
+  listeningState.playing = true;
+  document.getElementById("listeningToggle").textContent = "⏸ 停止する";
+  playCurrentQuestion();
+}
+
+function speak(text, token) {
+  return new Promise(resolve => {
+    if (listeningState.token !== token || !text) { resolve(); return; }
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = "ja-JP";
+    utter.rate = 1.0;
+    utter.onend = resolve;
+    utter.onerror = resolve;
+    window.speechSynthesis.speak(utter);
+  });
+}
+
+async function playCurrentQuestion() {
+  const token = listeningState.token;
+  const q = listeningState.queue[listeningState.index];
+  if (!q) return;
+
+  try {
+    setListeningStatus("🔊 問題を読み上げ中…");
+    await speak(q.問題, token);
+    if (listeningState.token !== token) return;
+
+    setListeningStatus("⏳ 考え中…（4秒）");
+    await new Promise(r => setTimeout(r, 4000));
+    if (listeningState.token !== token) return;
+
+    const correctText = q.形式 === "○×" ? q["選択肢" + q.正解] : q.正解;
+    setListeningStatus("🔊 正解を読み上げ中…");
+    await speak(`正解は、${correctText}です。`, token);
+    if (listeningState.token !== token) return;
+
+    setListeningStatus("🔊 解説を読み上げ中…");
+    await speak(q.解説, token);
+    if (listeningState.token !== token) return;
+
+    if (q.間違えやすい理由) {
+      setListeningStatus("🔊 間違えやすいポイントを読み上げ中…");
+      await speak(`間違えやすいポイントです。${q.間違えやすい理由}`, token);
+      if (listeningState.token !== token) return;
+    }
+
+    setListeningStatus("⏳ 次の問題へ…");
+    await new Promise(r => setTimeout(r, 1500));
+    if (listeningState.token !== token) return;
+
+    listeningState.index += 1;
+    if (listeningState.index >= listeningState.queue.length) {
+      listeningState.playing = false;
+      renderListeningCard();
+      return;
+    }
+    renderListeningCard();
+    document.getElementById("listeningToggle").textContent = "⏸ 停止する";
+    playCurrentQuestion();
+  } catch (e) {
+    // 停止された場合はここに来る（正常系）
+  }
 }
 
 function escapeHtml(str) {
