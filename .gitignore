@@ -18,5 +18,7 @@ token*.json
 *.log
 node_modules/
 .cache/
+__pycache__/
+*.pyc
 reports/kairos-weekly/*.md
 reports/kairos-weekly/*.log

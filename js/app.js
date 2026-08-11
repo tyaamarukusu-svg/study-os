@@ -2,6 +2,7 @@
 
 const app = document.getElementById("app");
 let ALL_QUESTIONS = [];
+let INTRO_DATA = null;
 
 const routes = {
   "#/": renderHome,
@@ -9,11 +10,18 @@ const routes = {
   "#/exam": renderExam,       // 模擬試験
   "#/settings": renderSettings,
   "#/stats": renderStats,
-  "#/listening": renderListening
+  "#/listening": renderListening,
+  "#/intro": renderIntro,
+  "#/updates": renderUpdates
 };
 
 async function boot() {
   ALL_QUESTIONS = await StudyOS.loadQuestions();
+  try {
+    INTRO_DATA = await StudyOS.loadIntroQuestions();
+  } catch (error) {
+    console.warn(error);
+  }
   window.addEventListener("hashchange", route);
   route();
 }
@@ -52,13 +60,154 @@ function renderHome() {
     <div class="menu-grid">
       <button class="menu-card" onclick="location.hash='#/quiz?mode=one'"><span class="icon">✏️</span><span class="label">一問一答</span></button>
       <button class="menu-card" onclick="location.hash='#/listening'"><span class="icon">🎧</span><span class="label">聞き流し</span></button>
+      <button class="menu-card" onclick="location.hash='#/intro'"><span class="icon">📘</span><span class="label">イントロ実践問題</span><span class="menu-note">代表5問を試作中</span></button>
       <button class="menu-card" onclick="location.hash='#/stats'"><span class="icon">📊</span><span class="label">学習記録</span></button>
       <button class="menu-card" onclick="location.hash='#/settings'"><span class="icon">⚙️</span><span class="label">設定</span></button>
+      <button class="menu-card" onclick="location.hash='#/updates'"><span class="icon">🆕</span><span class="label">更新履歴</span></button>
     </div>
     <p class="text-center mt-lg">
       <a class="back-link" href="admin.html">🔧 管理者画面はこちら</a>
     </p>
   `;
+}
+
+/* ===== イントロ実践問題（正本の代表5問） ===== */
+let introState = { index: 0 };
+
+function renderIntro() {
+  setAppbar("イントロ実践問題");
+  const questions = INTRO_DATA?.questions || [];
+  const question = questions[introState.index];
+  if (!question) {
+    app.innerHTML = `
+      <a class="back-link" href="#/">← ホームへ戻る</a>
+      <div class="empty-state">イントロ問題を読み込めませんでした。</div>
+    `;
+    return;
+  }
+
+  app.innerHTML = `
+    <a class="back-link" href="#/">← ホームへ戻る</a>
+    <div class="intro-progress">試作 ${introState.index + 1} / ${questions.length}問（原本全60問）</div>
+    <form class="q-card" id="introForm">
+      <div class="q-meta"><span>第${question.chapter}章 問${question.questionNumber}</span><span>${question.field}</span></div>
+      <div class="q-text">${escapeHtml(question.prompt)}</div>
+      ${question.passage ? `<div class="intro-passage">${formatIntroText(question.passage)}</div>` : ""}
+      ${question.scenario ? `<div class="intro-passage">${escapeHtml(question.scenario)}</div>` : ""}
+      ${renderIntroInputs(question)}
+      ${question.visual?.required ? `<div class="intro-warning">🖼 公開用の独自図版は準備中です。現在は選択肢の説明文で回答してください。</div>` : ""}
+      <div id="introResult"></div>
+      <button class="next-btn" type="submit">回答する</button>
+    </form>
+  `;
+  document.getElementById("introForm").onsubmit = event => {
+    event.preventDefault();
+    gradeIntroQuestion(question);
+  };
+}
+
+function renderIntroInputs(question) {
+  if (question.type === "fill_match") {
+    return ["A", "B", "C", "D"].map(label => `
+      <label class="intro-select-label">［${label}］
+        <select name="mapping-${label}" class="intro-select" required>
+          <option value="">選択してください</option>
+          ${question.options.map(option => `<option value="${option.id}">${option.id}. ${escapeHtml(option.text)}</option>`).join("")}
+        </select>
+      </label>
+    `).join("");
+  }
+  if (question.type === "case_study") {
+    return question.subquestions.map(sub => `
+      <fieldset class="intro-subquestion">
+        <legend>${escapeHtml(sub.prompt)}</legend>
+        ${sub.options.map(option => introOption("radio", `sub-${sub.id}`, option)).join("")}
+      </fieldset>
+    `).join("");
+  }
+  const inputType = question.type === "multiple_choice" ? "checkbox" : "radio";
+  return `<div class="intro-options">
+    ${question.options.map(option => introOption(inputType, "answer", option)).join("")}
+  </div>`;
+}
+
+function introOption(type, name, option) {
+  return `<label class="intro-option"><input type="${type}" name="${name}" value="${option.id}"> <span>${option.id}. ${escapeHtml(option.text)}</span></label>`;
+}
+
+function gradeIntroQuestion(question) {
+  const form = document.getElementById("introForm");
+  const values = new FormData(form);
+  let correct = false;
+  let answerText = "";
+
+  if (question.answer.kind === "mapping") {
+    const expected = question.answer.value;
+    correct = Object.entries(expected).every(([key, value]) => values.get(`mapping-${key}`) === value);
+    answerText = Object.entries(expected).map(([key, value]) => `${key}=${value}`).join("、");
+  } else if (question.answer.kind === "multiple") {
+    const selected = values.getAll("answer").sort();
+    const expected = [...question.answer.value].sort();
+    correct = JSON.stringify(selected) === JSON.stringify(expected);
+    answerText = expected.join("、");
+  } else if (question.answer.kind === "compound") {
+    const expected = question.answer.value;
+    correct = Object.entries(expected).every(([key, value]) => values.get(`sub-${key}`) === value);
+    answerText = Object.entries(expected).map(([key, value]) => `${key}=${value}`).join("、");
+  } else {
+    correct = values.get("answer") === question.answer.value;
+    answerText = question.answer.value;
+  }
+
+  document.querySelectorAll("#introForm input, #introForm select").forEach(input => input.disabled = true);
+  const result = document.getElementById("introResult");
+  result.innerHTML = `
+    <div class="result-box ${correct ? "correct" : "wrong"}">
+      <div class="title">${correct ? "⭕ 正解！" : "❌ 不正解"}</div>
+      <div><strong>正解：${escapeHtml(answerText)}</strong></div>
+      <div class="mt-sm">${escapeHtml(question.explanation)}</div>
+      <div class="pitfall-note">⚠ ${escapeHtml(question.pitfall)}</div>
+    </div>
+    <button type="button" class="next-btn" id="introNext">${introState.index + 1 < (INTRO_DATA?.questions.length || 0) ? "次の問題へ" : "最初から見る"}</button>
+  `;
+  form.querySelector('button[type="submit"]').hidden = true;
+  document.getElementById("introNext").onclick = () => {
+    introState.index = introState.index + 1 < INTRO_DATA.questions.length ? introState.index + 1 : 0;
+    renderIntro();
+  };
+}
+
+function formatIntroText(text) {
+  return escapeHtml(text).replace(/［([A-D])］/g, '<strong class="intro-blank">［$1］</strong>');
+}
+
+/* ===== 利用者向け更新履歴 ===== */
+async function renderUpdates() {
+  setAppbar("更新履歴");
+  app.innerHTML = `<a class="back-link" href="#/">← ホームへ戻る</a><div class="empty-state">読み込み中…</div>`;
+  try {
+    const data = await StudyOS.loadReleases();
+    app.innerHTML = `
+      <a class="back-link" href="#/">← ホームへ戻る</a>
+      ${data.releases.map(release => `
+        <section class="q-card release-card">
+          <div class="release-heading"><strong>${escapeHtml(release.version)}</strong><span>${escapeHtml(release.date)}</span></div>
+          ${releaseSection("新機能", release.newFeatures)}
+          ${releaseSection("改善", release.improvements)}
+          ${releaseSection("不具合修正", release.bugFixes)}
+          ${releaseSection("既知の問題", release.knownIssues)}
+          ${releaseSection("次回予定", release.next)}
+        </section>
+      `).join("")}
+    `;
+  } catch (error) {
+    app.innerHTML = `<a class="back-link" href="#/">← ホームへ戻る</a><div class="empty-state">更新履歴を読み込めませんでした。</div>`;
+  }
+}
+
+function releaseSection(title, items) {
+  if (!items?.length) return "";
+  return `<div class="release-section"><h3>${title}</h3><ul>${items.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul></div>`;
 }
 
 /* ===== 出題セット作成（設定を反映） ===== */

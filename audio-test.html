@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study OS 音声テスト</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .audio-test-grid { display:grid; gap:16px; }
+  .audio-test-card audio { width:100%; margin-top:10px; }
+  .audio-test-meta { color:var(--sub); font-size:13px; margin-bottom:8px; }
+  .audio-test-script { white-space:pre-wrap; font-size:13px; color:var(--sub); }
+  .audio-test-status { min-height:1.6em; font-weight:700; color:var(--primary); }
+</style>
+</head>
+<body>
+  <header class="appbar"><span>🎧 Study OS 音声テスト</span><a href="index.html" style="color:white;font-size:12px;">← アプリへ戻る</a></header>
+  <main>
+    <p>短い・標準・長い問題を、問題 → 4秒 → 正解・解説の順で確認します。</p>
+    <div id="audioTestList" class="audio-test-grid"><div class="empty-state">音声を確認しています…</div></div>
+  </main>
+<script>
+const list = document.getElementById("audioTestList");
+
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
+}
+
+async function playSequence(card, item, waitSeconds) {
+  const questionAudio = card.querySelector(".question-audio");
+  const answerAudio = card.querySelector(".answer-audio");
+  const status = card.querySelector(".audio-test-status");
+  questionAudio.currentTime = 0;
+  answerAudio.currentTime = 0;
+  status.textContent = "🔊 問題を再生中";
+  await questionAudio.play();
+  await new Promise(resolve => questionAudio.addEventListener("ended", resolve, {once:true}));
+  status.textContent = `⏳ 考える時間（${waitSeconds}秒）`;
+  await new Promise(resolve => setTimeout(resolve, waitSeconds * 1000));
+  status.textContent = "🔊 正解・解説を再生中";
+  await answerAudio.play();
+  await new Promise(resolve => answerAudio.addEventListener("ended", resolve, {once:true}));
+  status.textContent = "✅ 再生完了";
+}
+
+fetch("audio/tts-test/manifest.json", {cache:"no-store"})
+  .then(response => {
+    if (!response.ok) throw new Error("manifest not found");
+    return response.json();
+  })
+  .then(manifest => {
+    list.innerHTML = manifest.items.map((item, index) => `
+      <section class="q-card audio-test-card" data-index="${index}">
+        <div class="q-meta"><span>${escapeHtml(item.lengthType)}</span><span>${escapeHtml(item.field)}</span><span>${item.characters}文字</span></div>
+        <div class="q-text">${escapeHtml(item.question)}</div>
+        <div class="audio-test-status">▶ 連続再生で確認してください</div>
+        <button class="next-btn sequence-button">問題 → 4秒 → 正解・解説を再生</button>
+        <details><summary>個別再生・読み上げ原稿</summary>
+          <p class="audio-test-script">${escapeHtml(item.questionScript)}</p>
+          <audio class="question-audio" controls preload="metadata" src="audio/tts-test/${encodeURIComponent(item.questionAudio)}"></audio>
+          <p class="audio-test-script">${escapeHtml(item.answerScript)}</p>
+          <audio class="answer-audio" controls preload="metadata" src="audio/tts-test/${encodeURIComponent(item.answerAudio)}"></audio>
+        </details>
+      </section>`).join("");
+    document.querySelectorAll(".audio-test-card").forEach((card, index) => {
+      card.querySelector(".sequence-button").onclick = () => playSequence(card, manifest.items[index], manifest.thinkingSeconds);
+    });
+  })
+  .catch(() => {
+    list.innerHTML = `<div class="empty-state">音声はまだ生成されていません。<br><code>OPENAI_API_KEY</code>を設定して生成スクリプトを実行してください。</div>`;
+  });
+</script>
+</body>
+</html>
