@@ -1,3 +1,22 @@
 source_docs/
 .DS_Store
 **/.DS_Store
+
+# Local settings and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.mobileprovision
+credentials*.json
+secrets*.json
+token*.json
+
+# Logs, caches, and generated weekly reports
+*.log
+node_modules/
+.cache/
+reports/kairos-weekly/*.md
+reports/kairos-weekly/*.log
