@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study OS 声の比較</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .voice-grid { display:grid; gap:16px; }
+  .voice-status { min-height:1.6em; color:var(--primary); font-weight:700; }
+  .countdown-dots { display:flex; justify-content:center; gap:10px; margin:14px 0; }
+  .countdown-dot { width:12px; height:12px; border-radius:50%; background:#dfe4f2; transition:.15s; }
+  .countdown-dot.active { background:var(--primary); transform:scale(1.35); }
+</style>
+</head>
+<body>
+  <header class="appbar"><span>🎧 声とカウント音の比較</span><a href="index.html" style="color:white;font-size:12px;">← アプリへ戻る</a></header>
+  <main>
+    <p>同じ問題を女性寄り・男性寄りの声で再生します。問題の後に4回の小さなカウント音が入り、正解・解説へ進みます。</p>
+    <div id="voiceList" class="voice-grid"><div class="empty-state">比較音声を確認しています…</div></div>
+  </main>
+<script>
+const voiceList = document.getElementById("voiceList");
+
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
+}
+
+function waitForEnd(audio) {
+  return new Promise(resolve => audio.addEventListener("ended", resolve, {once:true}));
+}
+
+async function beep(finalBeep = false) {
+  const AudioContext = window.AudioContext || window.webkitAudioContext;
+  const context = new AudioContext();
+  const oscillator = context.createOscillator();
+  const gain = context.createGain();
+  oscillator.frequency.value = finalBeep ? 880 : 660;
+  gain.gain.setValueAtTime(0.0001, context.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.06, context.currentTime + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.14);
+  oscillator.connect(gain).connect(context.destination);
+  oscillator.start();
+  oscillator.stop(context.currentTime + 0.15);
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  await context.close();
+}
+
+async function playSequence(card) {
+  const questionAudio = card.querySelector(".question-audio");
+  const answerAudio = card.querySelector(".answer-audio");
+  const status = card.querySelector(".voice-status");
+  const dots = [...card.querySelectorAll(".countdown-dot")];
+  card.querySelector("button").disabled = true;
+  questionAudio.currentTime = 0;
+  answerAudio.currentTime = 0;
+  status.textContent = "🔊 問題を再生中";
+  await questionAudio.play();
+  await waitForEnd(questionAudio);
+  status.textContent = "考える時間です";
+  for (let index = 0; index < 4; index += 1) {
+    dots.forEach((dot, dotIndex) => dot.classList.toggle("active", dotIndex === index));
+    await beep(index === 3);
+  }
+  dots.forEach(dot => dot.classList.remove("active"));
+  status.textContent = "🔊 正解・解説を再生中";
+  await answerAudio.play();
+  await waitForEnd(answerAudio);
+  status.textContent = "✅ 再生完了";
+  card.querySelector("button").disabled = false;
+}
+
+fetch("audio/voice-comparison/manifest.json", {cache:"no-store"})
+  .then(response => {
+    if (!response.ok) throw new Error("manifest not found");
+    return response.json();
+  })
+  .then(manifest => {
+    voiceList.innerHTML = manifest.items.map(item => `
+      <section class="q-card voice-card">
+        <div class="q-meta"><span>${escapeHtml(item.label)}</span><span>${escapeHtml(manifest.model)}</span></div>
+        <div class="q-text">${escapeHtml(manifest.question)}</div>
+        <div class="voice-status">▶ 一連の流れを確認してください</div>
+        <div class="countdown-dots"><span class="countdown-dot"></span><span class="countdown-dot"></span><span class="countdown-dot"></span><span class="countdown-dot"></span></div>
+        <button class="next-btn">問題 → カウント → 正解・解説</button>
+        <audio class="question-audio" preload="metadata" src="audio/voice-comparison/${encodeURIComponent(item.questionAudio)}"></audio>
+        <audio class="answer-audio" preload="metadata" src="audio/voice-comparison/${encodeURIComponent(item.answerAudio)}"></audio>
+      </section>`).join("");
+    document.querySelectorAll(".voice-card").forEach(card => {
+      card.querySelector("button").onclick = () => playSequence(card);
+    });
+  })
+  .catch(() => {
+    voiceList.innerHTML = `<div class="empty-state">比較音声はまだ生成されていません。<br>生成スクリプトを実行してください。</div>`;
+  });
+</script>
+</body>
+</html>
