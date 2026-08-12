@@ -24,7 +24,7 @@ const StudyOS = (() => {
         return cache;
       } catch { /* fall through to file */ }
     }
-    const res = await fetch("data/questions.json");
+    const res = await fetch("data/questions.json", { cache: "no-store" });
     cache = _excludeUnsellable(await res.json());
     return cache;
   }
@@ -36,7 +36,7 @@ const StudyOS = (() => {
 
   async function loadIntroQuestions() {
     if (introCache) return introCache;
-    const res = await fetch("data/intro_questions.json");
+    const res = await fetch("data/intro_questions.json", { cache: "no-store" });
     if (!res.ok) throw new Error(`イントロ問題を読み込めませんでした (${res.status})`);
     introCache = await res.json();
     return introCache;
@@ -44,7 +44,7 @@ const StudyOS = (() => {
 
   async function loadReleases() {
     if (releasesCache) return releasesCache;
-    const res = await fetch("data/releases.json");
+    const res = await fetch("data/releases.json", { cache: "no-store" });
     if (!res.ok) throw new Error(`更新履歴を読み込めませんでした (${res.status})`);
     releasesCache = await res.json();
     return releasesCache;
