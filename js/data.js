@@ -119,6 +119,51 @@ const StudyOS = (() => {
     };
   }
 
+  // 公式5分野（貨物自動車運送事業法・道路運送車両法・道路交通法・労働基準法・実務上の知識及び能力）ごとの
+  // 学習状況を集計する。判定は「問題単位のタグ」ではなく「利用者の回答履歴」ベース。
+  const OFFICIAL_FIELDS = ["貨物自動車運送事業法", "道路運送車両法", "道路交通法", "労働基準法", "実務上の知識及び能力"];
+
+  function getFieldBreakdown(questions) {
+    const progress = loadProgress();
+    return OFFICIAL_FIELDS.map(field => {
+      const fieldQuestions = questions.filter(q => q.公式分野 === field);
+      let attempted = 0, totalAttempts = 0, totalCorrect = 0;
+      fieldQuestions.forEach(q => {
+        const h = progress.answers[q.id];
+        if (h) {
+          attempted += 1;
+          totalAttempts += h.attempts;
+          totalCorrect += h.correct;
+        }
+      });
+      const accuracy = totalAttempts > 0 ? Math.round((totalCorrect / totalAttempts) * 100) : 0;
+
+      let status, statusLabel;
+      if (attempted === 0) {
+        status = "未着手"; statusLabel = "⚠ 未着手";
+      } else if (accuracy < 60) {
+        status = "要注意"; statusLabel = "⚠ 要注意";
+      } else if (accuracy < 80) {
+        status = "学習中"; statusLabel = "学習中";
+      } else {
+        status = "高得点ペース"; statusLabel = "◎ 高得点ペース";
+      }
+      // ⑤実務上の知識及び能力のみ本番で2問以上必要（他は1問以上）なので要注意時のみ注記する
+      if (field === "実務上の知識及び能力" && (status === "要注意" || status === "未着手")) {
+        statusLabel += "（本番は2問以上必要）";
+      }
+
+      return {
+        field,
+        totalQuestions: fieldQuestions.length,
+        attempted,
+        accuracy,
+        status,
+        statusLabel,
+      };
+    });
+  }
+
   // 苦手のみ: 直近の結果が不正解 or 正答率が低いもの
   function filterByMode(questions, mode) {
     const progress = loadProgress();
@@ -149,6 +194,6 @@ const StudyOS = (() => {
     loadQuestions, loadIntroQuestions, loadReleases, invalidateCache,
     loadProgress, saveProgress, recordAnswer,
     loadSettings, saveSettings,
-    getStats, filterByMode, shuffle
+    getStats, getFieldBreakdown, filterByMode, shuffle
   };
 })();

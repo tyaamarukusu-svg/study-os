@@ -51,12 +51,14 @@ function setAppbar(title) {
 function renderHome() {
   setAppbar("Study OS");
   const stats = StudyOS.getStats(ALL_QUESTIONS);
+  const breakdown = StudyOS.getFieldBreakdown(ALL_QUESTIONS);
   app.innerHTML = `
     <div class="stats-bar">
       <div class="stat"><div class="num">${stats.accuracy}%</div><div class="label">正答率</div></div>
       <div class="stat"><div class="num">${stats.streak}</div><div class="label">連続正解</div></div>
       <div class="stat"><div class="num">${stats.answeredQuestions}/${stats.totalQuestions}</div><div class="label">学習済み</div></div>
     </div>
+    ${renderFieldBreakdown(breakdown)}
     <div class="menu-grid">
       <button class="menu-card" onclick="location.hash='#/quiz?mode=one'"><span class="icon">✏️</span><span class="label">一問一答</span></button>
       <button class="menu-card" onclick="location.hash='#/listening'"><span class="icon">🎧</span><span class="label">聞き流し</span></button>
@@ -69,6 +71,36 @@ function renderHome() {
       <a class="back-link" href="admin.html">🔧 管理者画面はこちら</a>
     </p>
   `;
+}
+
+function renderFieldBreakdown(breakdown) {
+  const rows = breakdown.map(f => `
+    <div class="field-row">
+      <div class="field-row-head">
+        <span class="field-name">${escapeHtml(f.field)}</span>
+        <span class="field-status field-status--${statusClass(f.status)}">${escapeHtml(f.statusLabel)}</span>
+      </div>
+      <div class="field-bar-track"><div class="field-bar-fill field-bar-fill--${statusClass(f.status)}" style="width:${f.accuracy}%"></div></div>
+      <div class="field-row-note">正答率${f.accuracy}%（${f.attempted}/${f.totalQuestions}問学習）</div>
+    </div>
+  `).join("");
+
+  return `
+    <div class="field-breakdown">
+      <div class="field-breakdown-title">公式5分野の理解度</div>
+      ${rows}
+    </div>
+  `;
+}
+
+function statusClass(status) {
+  switch (status) {
+    case "未着手": return "todo";
+    case "要注意": return "warn";
+    case "学習中": return "mid";
+    case "高得点ペース": return "good";
+    default: return "todo";
+  }
 }
 
 /* ===== イントロ実践問題（正本の代表5問） ===== */
