@@ -6,16 +6,16 @@
 (() => {
   const CONFIG = {
     learner: {
-      password: "kamotsu2026",
+      password: "CHANGE_ME_LEARNER_PASSPHRASE",
       storageKey: "studyOS_beta_unlocked_v1",
       title: "Study OS ベータ版",
-      message: "ご購入いただいたパスワードを入力してください。",
+      message: "ご案内した合言葉を入力してください。",
     },
     admin: {
-      password: "admin-kataoka-only",
+      password: "CHANGE_ME_ADMIN_PASSPHRASE",
       storageKey: "studyOS_admin_unlocked_v1",
       title: "管理者専用画面",
-      message: "管理者パスワードを入力してください。",
+      message: "管理者用の合言葉を入力してください。",
     },
   };
 
