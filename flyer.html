@@ -187,6 +187,50 @@
     flex:none;
   }
 
+  .price-box{
+    background:var(--card);
+    border:1.5px solid var(--blue);
+    border-radius:12px;
+    padding:16px 18px;
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .price-box .price{ font-size:24px; font-weight:800; color:var(--blue-deep); }
+  .price-box .price small{ font-size:12px; font-weight:600; margin-left:2px; }
+  .price-box .until{ font-size:12px; color:var(--sub); }
+
+  .steps-num{ display:flex; flex-direction:column; gap:10px; }
+  .steps-num .item{
+    display:flex;
+    gap:12px;
+    align-items:flex-start;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:11px 14px;
+  }
+  .steps-num .num{
+    flex:none;
+    width:22px; height:22px; border-radius:50%;
+    background:var(--blue); color:#fff;
+    font-size:12px; font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .steps-num .txt{ font-size:13px; line-height:1.7; }
+
+  .passphrase-box{
+    background:var(--blue-tint);
+    border:1px dashed var(--blue);
+    border-radius:10px;
+    padding:12px 16px;
+    font-size:13px;
+    line-height:1.8;
+    color:var(--blue-deep);
+  }
+
   footer{
     background:var(--blue-tint);
     padding:20px 34px 26px;
@@ -226,9 +270,9 @@
 <div class="sheet">
   <header>
     <div class="lockup">
-      <p class="eyebrow">運行管理者試験 学習アプリ・テスト版 v1.1</p>
-      <h1>Study OS を試してみてください</h1>
-      <p>スマホ・PCのブラウザだけで動く一問一答アプリです。会員登録なし、無料。今のところ機能を絞ったテスト段階なので、率直な感想をもらえると助かります。</p>
+      <p class="eyebrow">運行管理者試験（貨物）学習サポートツール・V1ベータ</p>
+      <h1>Study OS ベータ版のご案内</h1>
+      <p>9/6の試験まで、スキマ時間で一問一答を繰り返せる学習ツールです。ベータ版として少人数限定でご案内しています。</p>
     </div>
     <div class="qr-block">
       <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAXIAAAFyAQMAAADS6sNKAAAABlBMVEUAAAD///+l2Z/dAAAAAnRSTlP//8i138cAAAAJcEhZcwAACxIAAAsSAdLdfvwAAAG6SURBVHic7dpBboQwDAVQSxyAI3F1jsQBkNwk305SQNVU7eaj7wUDw4PNxCYOY/67MHl5eXl5efl/8haxlP1jcdvaxk8re3luk+f1OEha9qpYPQ8Hkef0FVzPle9wjzpQ5F/hcQ6R40H+Pd73tQ2F5XYPeWbvqWztT+mP6r88g4/oU7Fpk+fkef0Uu+VTehujYIQ8o49fHFl+WrloiSv3dlg38sS+F/AxFMJnqj883+VZPKIBPy79stmc9PKM3tBFZVrHAOhF3R7qgzyRR1pHRAPVOqvM/Jh0y3N6a2vTaKUSXKba1/5LnsiXOHOWjQLeLo9Ux/BweV4/zahxZX1y+zmNFnlib2bzUMCi5k/1XJ7Mr6EwC0Oqt1LeF603eV4/XjtE09xfJWL5+jYfkyfzmeo+lqo9CoH7rZ7Lk/m63ZHi3/qpKenlaf0I5DteGnu0V3GRPK03m4ZCRPgs9Hk/eUaPH/votbsvWm84+1jP5Xl8n1aP8TDX8/t8W57V53wMtLXP2JN/gW+9055dlPVFa3d5Yt8+EkQpH03V/f8e8lQ+YsGzOd5CQD29j5Dn8p+HvLy8vLy8/N/9F5HaB5CTWFYuAAAAAElFTkSuQmCC" alt="QRコード">
@@ -237,54 +281,65 @@
   </header>
 
   <main>
+    <div class="price-box">
+      <div><span class="price">980<small>円（税込・一回限り）</small></span></div>
+      <div class="until">利用期間の目安：2026年9月6日の試験日まで</div>
+    </div>
+
     <div class="link-row">🔗 https://tyaamarukusu-svg.github.io/study-os/</div>
-    <p class="body-text" style="margin-top:-10px;color:var(--sub);font-size:12px;">※以前送ったURLから変更し、常時つながる形式に切り替えました。今後URLが変わることはありません。</p>
+    <p class="body-text" style="margin-top:-10px;color:var(--sub);font-size:12px;">※このURLは変わりません。ブックマークしておくと便利です。</p>
 
     <section>
-      <div class="sec-head"><span class="tag">概要</span><h2>これは何のアプリ？</h2></div>
-      <p class="body-text">運行管理者試験（貨物）対策の一問一答アプリです。参考書と解説動画をもとに、問題・正解・解説・「間違えやすい理由」まで187問分をまとめています。○×形式で、答えるとすぐに解説が出ます。</p>
+      <div class="sec-head"><span class="tag">対象者</span><h2>こんな方に向いています</h2></div>
+      <p class="body-text">運行管理者試験（貨物）を受験予定で、通勤時間やちょっとしたスキマ時間に一問一答形式で知識を定着させたい方向けです。参考書を最初から読み直す時間がない方の「反復練習の場」として使ってください。</p>
+    </section>
+
+    <section>
+      <div class="sec-head"><span class="tag">概要</span><h2>何ができるか</h2></div>
+      <p class="body-text">参考書・解説動画をもとに作成した217問（○×形式）を、一問一答で繰り返し解けます。答えるとすぐに解説と「間違えやすいポイント」が表示されます。ホーム画面では「公式5分野」ごとの正答率が確認でき、本番の足切り（分野ごとの最低正解数）を意識した学習管理ができます。ブラウザの読み上げ機能を使った「聞き流し」モードもあります。</p>
     </section>
 
     <section>
       <div class="sec-head"><span class="tag">使い方</span><h2>3ステップで始められます</h2></div>
-      <div class="grid2">
-        <div class="mini-card"><div class="label">Step 1</div><div class="value">QRを読み取るか、リンクを開く</div></div>
-        <div class="mini-card"><div class="label">Step 2</div><div class="value">ホーム画面の「一問一答」をタップ</div></div>
-        <div class="mini-card"><div class="label">Step 3</div><div class="value">○×で回答→解説を読んで次へ</div></div>
+      <div class="steps-num">
+        <div class="item"><span class="num">1</span><span class="txt">上のリンクを開く、または当日ご案内する合言葉を用意する</span></div>
+        <div class="item"><span class="num">2</span><span class="txt">「パスワード」欄に合言葉を入力して「入る」を押す（次回以降は自動で入れます）</span></div>
+        <div class="item"><span class="num">3</span><span class="txt">ホーム画面の「一問一答」または「聞き流し」から学習開始</span></div>
       </div>
+      <div class="passphrase-box" style="margin-top:10px;">🔑 合言葉は購入完了後に個別でお伝えします。ご自身以外との共有はご遠慮ください。</div>
     </section>
 
     <section>
       <div class="sec-head"><span class="tag">安全性</span><h2>安心して使える理由</h2></div>
       <div class="safe-box">
         <span class="icon">🔒</span>
-        <p>ログイン・会員登録は不要です。名前やメールアドレスなど、個人情報の入力は一切求めません。学習の記録（正答率など）はご自身の端末のブラウザ内だけに保存され、外部には送信されません。</p>
+        <p>お名前やメールアドレスなど、アプリ側での個人情報の入力は求めません。学習の記録（正答率など）はご自身の端末のブラウザ内だけに保存され、外部には送信されません。</p>
       </div>
     </section>
 
     <section>
-      <div class="sec-head"><span class="tag">注意点</span><h2>今のところ、ここは未完成です</h2></div>
+      <div class="sec-head"><span class="tag">ベータ版について</span><h2>ご購入前にご確認ください</h2></div>
       <ul class="plain">
-        <li>問題は貨物運送関係の第1〜5章の一部のみ。全範囲を網羅していません</li>
-        <li>本番と同じ「4択から選ぶ」形式ではなく、今は○×形式のみです</li>
-        <li>デザインは仮のもの。今後作り込む予定です</li>
-        <li>内容に誤りが見つかることがあります。「これは違うのでは」と思ったら遠慮なく教えてください</li>
+        <li>本アプリは開発中のベータ版です。問題数・機能は今後変更される場合があります</li>
+        <li>収録問題は公開情報・参考資料等をもとに、学習用に再構成しています。実際の試験内容・出題傾向を保証するものではありません</li>
+        <li>本サービスの利用または試験結果について、当方は責任を負いかねます</li>
+        <li>ご購入後の返金は原則行いません。アプリが利用できない等の技術的な不具合があった場合はご相談ください</li>
+        <li>本番と同じ「4択」ではなく、今は○×形式のみです</li>
       </ul>
     </section>
 
     <section>
       <div class="sec-head"><span class="tag">今後の予定</span><h2>順次追加していきます</h2></div>
       <div class="roadmap">
-        <div class="item"><span class="dot"></span>本番形式の4択問題モード</div>
-        <div class="item"><span class="dot"></span>音声で聞き流せる復習モード</div>
-        <div class="item"><span class="dot"></span>学習の進み具合をグラフで表示</div>
-        <div class="item"><span class="dot"></span>見た目のデザイン改善</div>
+        <div class="item"><span class="dot"></span>本番形式の4択問題モード（イントロ実践問題として試作中）</div>
+        <div class="item"><span class="dot"></span>要注意・未着手分野をまとめて提示するホーム画面の改善</div>
+        <div class="item"><span class="dot"></span>詳細タグの充実</div>
       </div>
     </section>
   </main>
 
   <footer>
-    <p class="foot-title">感想・要望・不具合について</p>
-    <p class="foot-note">「ここが分かりにくい」「こんな問題が欲しい」「動かなくなった」など、どんな内容でも歓迎です。担当の片岡まで、直接声をかけてください。開けない・止まっているなどの不具合があれば、まず一度ページを再読み込みしてみてください。</p>
+    <p class="foot-title">質問・不具合報告について</p>
+    <p class="foot-note">「ここが分かりにくい」「動かなくなった」など、どんな内容でも歓迎です。担当の片岡まで直接ご連絡ください。開けない・止まっているなどの不具合があれば、まず一度ページを再読み込みしてみてください。</p>
   </footer>
 </div>
