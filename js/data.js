@@ -20,13 +20,18 @@ const StudyOS = (() => {
     const overrides = localStorage.getItem("studyOS_admin_overrides_v1");
     if (overrides) {
       try {
-        cache = JSON.parse(overrides);
+        cache = _excludeUnsellable(JSON.parse(overrides));
         return cache;
       } catch { /* fall through to file */ }
     }
     const res = await fetch("data/questions.json");
-    cache = await res.json();
+    cache = _excludeUnsellable(await res.json());
     return cache;
+  }
+
+  // 根拠が確認できていない問題（販売対象: false）は出題プールから除外する
+  function _excludeUnsellable(questions) {
+    return questions.filter(q => q.販売対象 !== false);
   }
 
   async function loadIntroQuestions() {
