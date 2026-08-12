@@ -60,9 +60,24 @@ function renderHome() {
       <button class="menu-card" onclick="location.hash='#/settings'"><span class="icon">⚙️</span><span class="label">設定</span></button>
       <button class="menu-card" onclick="location.hash='#/updates'"><span class="icon">🆕</span><span class="label">更新履歴</span></button>
     </div>
-    <p class="text-center mt-lg">
-      <a class="back-link" href="admin.html">🔧 管理者画面はこちら</a>
-    </p>
+    ${renderBetaNotice()}
+  `;
+}
+
+function renderBetaNotice() {
+  return `
+    <details class="beta-notice">
+      <summary>ベータ版について</summary>
+      <ul>
+        <li>本アプリは運行管理者試験(貨物)対策のベータ版です。問題数・機能は今後変更される場合があります。</li>
+        <li>収録問題は公開情報・参考資料等をもとに、学習用に再構成しています。実際の試験内容・出題傾向を保証するものではありません。学習の補助としてご利用ください。</li>
+        <li>ご利用期間の目安は2026年9月6日の試験日までです。</li>
+        <li>本サービスの利用または結果(試験の合否等)について、当方は責任を負いかねます。</li>
+        <li>ご購入後の返金は原則行いません。ただしアプリが利用できない等の技術的な不具合があった場合はご相談ください。</li>
+        <li>本アプリのURL・パスワードのご購入者以外への共有はご遠慮ください。</li>
+        <li>ご不明点・不具合報告は購入時にご案内した連絡先までお願いします。</li>
+      </ul>
+    </details>
   `;
 }
 
@@ -596,4 +611,4 @@ function escapeHtml(str) {
   }[c]));
 }
 
-boot();
+StudyOSGate.protect("learner", boot);
