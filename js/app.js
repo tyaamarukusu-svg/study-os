@@ -11,17 +11,11 @@ const routes = {
   "#/settings": renderSettings,
   "#/stats": renderStats,
   "#/listening": renderListening,
-  "#/intro": renderIntro,
   "#/updates": renderUpdates
 };
 
 async function boot() {
   ALL_QUESTIONS = await StudyOS.loadQuestions();
-  try {
-    INTRO_DATA = await StudyOS.loadIntroQuestions();
-  } catch (error) {
-    console.warn(error);
-  }
   window.addEventListener("hashchange", route);
   route();
 }
@@ -62,7 +56,6 @@ function renderHome() {
     <div class="menu-grid">
       <button class="menu-card" onclick="location.hash='#/quiz?mode=one'"><span class="icon">✏️</span><span class="label">一問一答</span></button>
       <button class="menu-card" onclick="location.hash='#/listening'"><span class="icon">🎧</span><span class="label">聞き流し</span></button>
-      <button class="menu-card" onclick="location.hash='#/intro'"><span class="icon">📘</span><span class="label">イントロ実践問題</span><span class="menu-note">代表5問を試作中</span></button>
       <button class="menu-card" onclick="location.hash='#/stats'"><span class="icon">📊</span><span class="label">学習記録</span></button>
       <button class="menu-card" onclick="location.hash='#/settings'"><span class="icon">⚙️</span><span class="label">設定</span></button>
       <button class="menu-card" onclick="location.hash='#/updates'"><span class="icon">🆕</span><span class="label">更新履歴</span></button>
